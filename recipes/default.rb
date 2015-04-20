@@ -1,5 +1,5 @@
 include_recipe "zip"
-include_recipe "java"
+include_recipe "java8"
 include_recipe "jq"
 
 user 'play' do

@@ -5,5 +5,5 @@ license     "Apache 2.0"
 version     "1.0.0"
 
 depends 'jq'
-depends 'java', '~> 1.31.0'
-depends 'zip', '~> 1.1.0'
+depends 'java8'
+depends 'zip'
