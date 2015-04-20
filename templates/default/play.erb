@@ -1,0 +1,106 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          play
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description:
+# Description:
+### END INIT INFO
+
+APP="playapp"
+APP_PATH="/var/app/$APP"
+
+start() {
+
+  rm -f /var/run/play.pid
+
+  cp /opt/elasticbeanstalk/deploy/appsource/source_bundle /var/app/playapp.zip
+  rm -fR $APP_PATH/*
+  unzip -qq "$APP_PATH.zip" -d $APP_PATH
+  rm -f "$APP_PATH.zip"
+
+  if [ -L /var/app/current ]; then
+    unlink /var/app/current
+  fi
+
+  ln -s $APP_PATH/*/ /var/app/current
+
+  CONFIG_FILE="application.conf"
+  MODE=$( cat /opt/elasticbeanstalk/deploy/configuration/containerconfiguration | jq --raw-output '.optionsettings."aws:elasticbeanstalk:application:environment" | .[] | if startswith("mode=") then . else "" end ' | xargs echo $1 )
+
+  if [ "$MODE" = "mode=rc" ]; then
+    if [ -f $APP_PATH/*/conf/rc.application.conf ]; then
+      CONFIG_FILE="rc.application.conf"
+    fi
+  fi
+
+  if [ "$MODE" = "mode=live" ]; then
+    if [ -f $APP_PATH/*/conf/live.application.conf ]; then
+      CONFIG_FILE="live.application.conf"
+    fi
+  fi
+
+  PLAY_BIN=`find $APP_PATH/*/bin -not -name "*.bat" -not -type d`
+  PLAY_XMS="$( cat /opt/elasticbeanstalk/deploy/configuration/containerconfiguration | jq --raw-output '.optionsettings."aws:elasticbeanstalk:container:tomcat:jvmoptions" | .[] | if startswith("Xms=") then . else "" end ' | xargs echo $1 | tr -d 'Xms=' | tr -d '\n' )m"
+  PLAY_XMX="$( cat /opt/elasticbeanstalk/deploy/configuration/containerconfiguration | jq --raw-output '.optionsettings."aws:elasticbeanstalk:container:tomcat:jvmoptions" | .[] | if startswith("Xmx=") then . else "" end ' | xargs echo $1 | tr -d 'Xmx=' | tr -d '\n' )m"
+  PLAY_COMMAND="$PLAY_BIN -J-Xms$PLAY_XMS -J-Xmx$PLAY_XMX -Dpidfile.path=/var/run/play.pid -Dconfig.file=/var/app/current/conf/$CONFIG_FILE -Dsun.net.inetaddr.ttl=0 -Dsun.net.inetaddr.negative.ttl=0 -J-XX:+CMSClassUnloadingEnabled -J-XX:+UseConcMarkSweepGC"
+  $PLAY_COMMAND>/dev/null 2>&1 &
+
+  return 0
+}
+
+stop() {
+  PLAY_PROCESS=""
+
+  if [ -f /var/run/play.pid ]; then
+    PLAY_PROCESS=$(cat /var/run/play.pid)
+  else 
+    PLAY_PROCESS=$(ps aux | grep 'play.pid' | awk '{print $2}')
+  fi
+  
+  if [ "$PLAY_PROCESS" != "" ]; then
+    (kill $PLAY_PROCESS >/dev/null 2>&1 &) >/dev/null
+  fi
+
+  return 0
+}
+
+
+status() {
+  if [ -f /var/run/play.pid ]; then
+    exit 0;
+  else 
+    exit 1;
+  fi
+}
+
+case "$1" in
+  start)
+    start
+    exit 0
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    echo  "Restarting $APP."
+    stop
+    sleep 2
+    start
+    echo "$APP restarted."
+    ;;
+  status)
+    echo  "Checking status"
+    status
+    ;;
+  *)
+    N=/etc/init.d/play.$APP
+    echo "Usage: $N {start|stop|restart}" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
