@@ -85,8 +85,6 @@ template "containerconfiguration" do
   mode 0644
 end
 
-include_recipe "monit::service"
-
 template "#{node[:monit][:conf_dir]}/play.monitrc" do
     cookbook 'play'
     mode '0600'
