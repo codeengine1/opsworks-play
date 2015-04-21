@@ -1,6 +1,3 @@
-default[:play][:jvm] = {}
-default[:play][:jvm][:Xmx] = "400m"
-default[:play][:jvm][:Xms] = "400m"
-
-default[:play][:environment] = {}
-default[:play][:environment][:mode] = "rc"
+default[:play][:jvm_xmx] = "400m"
+default[:play][:jvm_xms] = "400m"
+default[:play][:mode] = "rc"
