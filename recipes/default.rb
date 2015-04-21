@@ -89,7 +89,6 @@ template "#{node[:monit][:conf_dir]}/play.monitrc" do
     cookbook 'play'
     mode '0600'
     source "monitrc.erb"
-    notifies :restart, "service[monit]"
 end
 
 include_recipe "play::service"
