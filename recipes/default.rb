@@ -2,6 +2,10 @@ include_recipe "zip"
 include_recipe "java8"
 include_recipe "jq"
 
+service 'monit' do
+  action :nothing
+end
+
 user 'play' do
   system true
 end
