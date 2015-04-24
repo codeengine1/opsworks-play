@@ -80,7 +80,7 @@ saferestart() {
   COUNTER=60
   until [  $COUNTER -lt 1 ]; do
     echo "Restaring play in $COUNTER seconds ..." | tee $LOG_FILE
-    let COUNTER-=1
+    COUNTER=$((COUNTER-1))
   done
 
   echo 'restarting play ... ' | tee $LOG_FILE
@@ -90,7 +90,7 @@ saferestart() {
   COUNTER=30
   until [  $COUNTER -lt 1 ]; do
     echo "Waiting $COUNTER seconds for play to initialize ..." | tee $LOG_FILE
-    let COUNTER-=1
+    COUNTER=$((COUNTER-1))
   done
 
   # check that play is running
