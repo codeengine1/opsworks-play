@@ -1,6 +1,7 @@
 include_recipe "zip"
 include_recipe "java8"
 include_recipe "jq"
+include_recipe "opwsorks-cloudwatch-logs"
 
 service 'monit' do
   action :nothing
