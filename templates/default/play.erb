@@ -85,7 +85,7 @@ saferestart() {
   done
 
   echo 'restarting play ... ' | tee $LOG_FILE
-  service monit restart play
+  monit restart play
 
   # wait 30 seconds for play to startup
   COUNTER=30
@@ -103,7 +103,7 @@ saferestart() {
 
 testapp() {
   wget -O /opt/elasticbeanstalk/deploy/appsource/source_bundle https://github.com/davemaple/playframework-example-application-mode/blob/master/playtest.zip?raw=true
-  service monit restart play
+  monit restart play
 }
 
 status() {
