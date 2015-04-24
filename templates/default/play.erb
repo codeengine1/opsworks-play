@@ -68,6 +68,37 @@ stop() {
   return 0
 }
 
+saferestart() {
+  LOG_FILE="/var/log/play/saferestart.log"
+  rm -f $LOG_FILE
+
+  # exit the load balancer
+  echo 'exiting the load balancer ... ' | tee $LOG_FILE
+  curl -X PUT http://localhost:9000/health-check/fail | tee $LOG_FILE
+
+  # wait 60 seconds for LB to remove node
+  COUNTER=60
+  until [  $COUNTER -lt 1 ]; do
+    echo "Restaring play in $COUNTER seconds ..." | tee $LOG_FILE
+    let COUNTER-=1
+  done
+
+  echo 'restarting play ... ' | tee $LOG_FILE
+  service monit restart play
+
+  # wait 30 seconds for play to startup
+  COUNTER=30
+  until [  $COUNTER -lt 1 ]; do
+    echo "Waiting $COUNTER seconds for play to initialize ..." | tee $LOG_FILE
+    let COUNTER-=1
+  done
+
+  # check that play is running
+  echo 'checking that play is running ... ' | tee $LOG_FILE
+  STATUS_CODE=$( curl -s -o /dev/null -w "%{http_code}" http://localhost/health-check )
+  echo "HTTP Status: $STATUS_CODE"
+}
+
 
 status() {
   if [ -f /var/run/play.pid ]; then
@@ -95,6 +126,11 @@ case "$1" in
   status)
     echo  "Checking status"
     status
+    ;;
+  saferestart)
+    echo  "Play saferestart $APP"
+    saferestart
+    echo "$APP restarted."
     ;;
   *)
     N=/etc/init.d/play.$APP
