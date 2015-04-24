@@ -101,6 +101,10 @@ saferestart() {
   echo "HTTP Status: $STATUS_CODE"
 }
 
+testapp() {
+  wget -O /opt/elasticbeanstalk/deploy/appsource/source_bundle https://github.com/davemaple/playframework-example-application-mode/blob/master/playtest.zip?raw=true
+  service monit restart play
+}
 
 status() {
   if [ -f /var/run/play.pid ]; then
@@ -133,6 +137,11 @@ case "$1" in
     echo  "Play saferestart $APP"
     saferestart
     echo "$APP restarted."
+    ;;
+  testapp)
+    echo  "Downloading test app ..."
+    testapp
+    echo "restarting ..."
     ;;
   *)
     N=/etc/init.d/play.$APP
